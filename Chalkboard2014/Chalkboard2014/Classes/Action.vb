@@ -5,6 +5,7 @@
     Private _cible As Joueur
     Private _depart As Point
     Private _fin As Point
+    Private _premDemie As Boolean
 
 #Region "Get/Set"
     Public Property Fin() As Point
@@ -61,13 +62,23 @@
             _nom = value
         End Set
     End Property
+
+    Public Property PremDemie() As Boolean
+        Get
+            Return _premDemie
+        End Get
+        Set(ByVal value As Boolean)
+            _premDemie = value
+        End Set
+    End Property
 #End Region
 
-    Public Sub New(pNom As String, pTemps As Double, pJoueur As Joueur, pDepart As Point)
+    Public Sub New(pNom As String, pTemps As Double, pJoueur As Joueur, pDepart As Point, pPremDemie As Boolean)
         _nom = pNom
         _temps = pTemps
         _joueur = pJoueur
         _depart = pDepart
+        _premDemie = pPremDemie
     End Sub
 
     Public Overrides Function ToString() As String

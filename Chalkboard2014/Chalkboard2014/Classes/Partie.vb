@@ -1,9 +1,5 @@
 ﻿Imports MySql.Data.MySqlClient
-Structure Shift
-    Public _joueur As Joueur
-    Public _debut As Double
-    Public _fin As Double
-End Structure
+
 Public Class Partie
 
     Private _adversaire As String
@@ -69,7 +65,6 @@ Public Class Partie
         _eq = eq
     End Sub
 
-
     Public Overrides Function ToString() As String
         Return _adversaire & " - " & _date.ToString
     End Function
@@ -81,6 +76,15 @@ Public Class Partie
         Return Nothing
     End Function
 
+    Public Sub AjouterShift(pJoueur As Joueur, pbEntre As Boolean, pTemps As Double)
+        If pbEntre Then
+            _shifts.Add(New Shift(pJoueur, pTemps))
+        Else
+            _shifts(_shifts.FindLastIndex(Function(x) x.Joueur = pJoueur)).Fin = pTemps
+        End If
+
+    End Sub
+
     Public Sub SaveToSQL()
         Dim myc As New MySqlConnection
         Dim command As MySqlCommand
@@ -88,7 +92,8 @@ Public Class Partie
         Dim SQL As String
         Dim idPartie As Integer
         Dim idAction As Integer
-        Dim temps As String
+        Dim temps, temps2 As String
+        Dim demie As Integer
 
         Try
             myc.ConnectionString = "server=localhost; user id=root; password=root; database=chalkboard"
@@ -101,7 +106,7 @@ Public Class Partie
             command.ExecuteNonQuery()
 
             'Obtention de l'id de la partie
-            SQL = "SELECT idpartie FROM chalkboard.chalkboard_partie where partiedate = '" & DatePartie.ToString("yyyy-MM-dd") & "' AND partieadv = '" & Adversaire & "' AND partie.equipe = '" & Equipe.Id & "';"
+            SQL = "SELECT idpartie FROM chalkboard.chalkboard_partie where partiedate = '" & DatePartie.ToString("yyyy-MM-dd") & "' AND partieadv = '" & Adversaire & "' AND equipe = '" & Equipe.Id & "';"
             command = New MySqlCommand(SQL, myc)
             reader = command.ExecuteReader()
             While reader.Read()
@@ -112,7 +117,7 @@ Public Class Partie
             'Ajout de l'alignement
             For Each player As Joueur In Alignement
                 SQL = "INSERT INTO `chalkboard`.`chalkboard_alignement` (`joueur`, `partie`, `joueurNo`) VALUES ('" & _
-                player.Passport & "','" & idPartie & "','" & player.No & "');"
+                    player.Passport & "','" & idPartie & "','" & player.No & "');"
                 command = New MySqlCommand(SQL, myc)
                 command.ExecuteNonQuery()
             Next
@@ -121,17 +126,32 @@ Public Class Partie
             For Each act In Actions
                 temps = FormatTime(act.Temps)
                 idAction = TrouverIdAction(act.Nom)
+                If act.PremDemie Then
+                    demie = 0
+                Else
+                    demie = 1
+                End If
                 Select Case idAction
                     Case 1, 2, 4, 7, 8, 16
-                        SQL = "INSERT INTO `chalkboard`.`chalkboard_event` (`joueur`, `action`, `partie`, `temps`, `debutx`, `debuty`) VALUES ('" & _
-                            act.Joueur.Passport & "', '" & idAction & "', '" & idPartie & "', '" & temps & "', '" & act.Depart.X & "', '" & act.Depart.Y & "');"
+                        SQL = "INSERT INTO `chalkboard`.`chalkboard_event` (`joueur`, `action`, `partie`, `temps`, `debutx`, `debuty`, `demie`) VALUES ('" & _
+                            act.Joueur.Passport & "', '" & idAction & "', '" & idPartie & "', '" & temps & "', '" & act.Depart.X & "', '" & act.Depart.Y & "', '" & demie & "');"
                     Case 5, 13, 14, 15
-                        SQL = "INSERT INTO `chalkboard`.`chalkboard_event` (`joueur`, `action`, `partie`, `temps`, `debutx`, `debuty`, `finx`, `finy`) VALUES ('" & _
-                         act.Joueur.Passport & "', '" & idAction & "', '" & idPartie & "', '" & temps & "', '" & act.Depart.X & "', '" & act.Depart.Y & "', '" & act.Fin.X & "', '" & act.Fin.Y & "');"
+                        SQL = "INSERT INTO `chalkboard`.`chalkboard_event` (`joueur`, `action`, `partie`, `temps`, `debutx`, `debuty`, `finx`, `finy`, `demie`) VALUES ('" & _
+                         act.Joueur.Passport & "', '" & idAction & "', '" & idPartie & "', '" & temps & "', '" & act.Depart.X & "', '" & act.Depart.Y & "', '" & act.Fin.X & "', '" & act.Fin.Y & "', '" & demie & "');"
                     Case 3, 6, 9, 10, 11, 12
-                        SQL = "INSERT INTO `chalkboard`.`chalkboard_event` (`joueur`, `action`, `partie`, `temps`, `debutx`, `debuty`, `finx`, `finy`, `cible`) VALUES ('" & _
-                            act.Joueur.Passport & "', '" & idAction & "', '" & idPartie & "', '" & temps & "', '" & act.Depart.X & "', '" & act.Depart.Y & "', '" & act.Fin.X & "', '" & act.Fin.Y & "', '" & act.Cible.Passport & "');"
+                        SQL = "INSERT INTO `chalkboard`.`chalkboard_event` (`joueur`, `action`, `partie`, `temps`, `debutx`, `debuty`, `finx`, `finy`, `cible`, `demie`) VALUES ('" & _
+                            act.Joueur.Passport & "', '" & idAction & "', '" & idPartie & "', '" & temps & "', '" & act.Depart.X & "', '" & act.Depart.Y & "', '" & act.Fin.X & "', '" & act.Fin.Y & "', '" & act.Cible.Passport & "', '" & demie & "');"
                 End Select
+                command = New MySqlCommand(SQL, myc)
+                command.ExecuteNonQuery()
+            Next
+
+            'Ajout des shifts
+            For Each shf In _shifts
+                temps = FormatTime(shf.Debut)
+                temps2 = FormatTime(shf.Fin)
+                SQL = "INSERT INTO `chalkboard`.`chalkboard_shift` (`joueur`, `partie`, `tempsdeb`, `tempsfin`) VALUES ('" & _
+                    shf.Joueur.Passport & "','" & idPartie & "','" & temps & "','" & temps2 & "');"
                 command = New MySqlCommand(SQL, myc)
                 command.ExecuteNonQuery()
             Next

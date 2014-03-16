@@ -37,11 +37,12 @@ Partial Class frmPrincipal
         Me.cmsPrincipal = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.lbLog = New System.Windows.Forms.ListBox()
         Me.gbAlignement = New System.Windows.Forms.GroupBox()
+        Me.Label2 = New System.Windows.Forms.Label()
+        Me.Label1 = New System.Windows.Forms.Label()
         Me.pnlBanc = New System.Windows.Forms.Panel()
         Me.pnlTerrain = New System.Windows.Forms.Panel()
         Me.btnAlign = New System.Windows.Forms.Button()
-        Me.Label1 = New System.Windows.Forms.Label()
-        Me.Label2 = New System.Windows.Forms.Label()
+        Me.cbDemie = New System.Windows.Forms.CheckBox()
         Me.MenuStrip1.SuspendLayout()
         CType(Me.pbField, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.gbAlignement.SuspendLayout()
@@ -152,6 +153,24 @@ Partial Class frmPrincipal
         Me.gbAlignement.TabStop = False
         Me.gbAlignement.Text = "Alignement"
         '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Location = New System.Drawing.Point(71, 24)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(40, 13)
+        Me.Label2.TabIndex = 4
+        Me.Label2.Text = "Terrain"
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(277, 24)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(32, 13)
+        Me.Label1.TabIndex = 3
+        Me.Label1.Text = "Banc"
+        '
         'pnlBanc
         '
         Me.pnlBanc.Location = New System.Drawing.Point(198, 40)
@@ -175,23 +194,15 @@ Partial Class frmPrincipal
         Me.btnAlign.Text = "Changement"
         Me.btnAlign.UseVisualStyleBackColor = True
         '
-        'Label1
+        'cbDemie
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(277, 24)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(32, 13)
-        Me.Label1.TabIndex = 3
-        Me.Label1.Text = "Banc"
-        '
-        'Label2
-        '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(71, 24)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(40, 13)
-        Me.Label2.TabIndex = 4
-        Me.Label2.Text = "Terrain"
+        Me.cbDemie.AutoSize = True
+        Me.cbDemie.Location = New System.Drawing.Point(82, 38)
+        Me.cbDemie.Name = "cbDemie"
+        Me.cbDemie.Size = New System.Drawing.Size(98, 17)
+        Me.cbDemie.TabIndex = 5
+        Me.cbDemie.Text = "Première demie"
+        Me.cbDemie.UseVisualStyleBackColor = True
         '
         'frmPrincipal
         '
@@ -199,6 +210,7 @@ Partial Class frmPrincipal
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1014, 628)
         Me.ContextMenuStrip = Me.cmsPrincipal
+        Me.Controls.Add(Me.cbDemie)
         Me.Controls.Add(Me.gbAlignement)
         Me.Controls.Add(Me.lbLog)
         Me.Controls.Add(Me.cbInvert)
@@ -235,5 +247,6 @@ Partial Class frmPrincipal
     Friend WithEvents pnlBanc As System.Windows.Forms.Panel
     Friend WithEvents Label2 As System.Windows.Forms.Label
     Friend WithEvents Label1 As System.Windows.Forms.Label
+    Friend WithEvents cbDemie As System.Windows.Forms.CheckBox
 
 End Class

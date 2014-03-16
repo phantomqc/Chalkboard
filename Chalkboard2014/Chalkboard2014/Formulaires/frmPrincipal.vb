@@ -13,6 +13,8 @@ Public Class frmPrincipal
     Private _passe As Boolean
     Private _actionTempo As Action
     Private _cible As Joueur
+    Private _banc As List(Of JoueurUITerrain)
+    Private _terrain As List(Of JoueurUITerrain)
 
     Private Sub frmPrincipal_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         TerminerToolStripMenuItem.Enabled = False
@@ -53,16 +55,30 @@ Public Class frmPrincipal
             CréerUneÉquipeToolStripMenuItem.Enabled = False
             AjouterUnePartieToolStripMenuItem.Enabled = False
             ModifierUneÉquipeToolStripMenuItem.Enabled = False
-
+            _banc = New List(Of JoueurUITerrain)
+            _terrain = New List(Of JoueurUITerrain)
             InitAlignement()
+            Affichage()
 
         End If
     End Sub
 
     Private Sub InitAlignement()
         Dim jui As JoueurUITerrain
-        Dim indice = 0
         For Each pl In _partie.Alignement
+            jui = New JoueurUITerrain
+            jui._txtNo = New TextBox()
+            jui._txtnom = New TextBox()
+            jui._txtnom.Text = pl.NomJoueur
+            jui._txtNo.Text = pl.No
+            _banc.Add(jui)
+        Next
+    End Sub
+
+    Private Sub Affichage()
+        Dim indice = 0
+        pnlBanc.Controls.Clear()
+        For Each jui In _banc
             jui._rb = New RadioButton()
             jui._rb.Name = "cb" & indice.ToString
             jui._rb.Size = New Size(20, 20)
@@ -71,21 +87,48 @@ Public Class frmPrincipal
             jui._rb.TabIndex = indice
             pnlBanc.Controls.Add(jui._rb)
 
-            jui._txtnom = New TextBox()
             jui._txtnom.Name = "txtNom" & indice.ToString
             jui._txtnom.Size = New Size(100, 20)
             jui._txtnom.Location = New Point(34, (indice + 1) * 22)
-            jui._txtnom.Text = pl.NomJoueur
+
             jui._txtnom.Enabled = False
             pnlBanc.Controls.Add(jui._txtnom)
 
-            jui._txtNo = New TextBox()
+
             jui._txtNo.Name = "txtNo" & indice.ToString
             jui._txtNo.Size = New Size(45, 20)
             jui._txtNo.Location = New Point(138, (indice + 1) * 22)
-            jui._txtNo.Text = pl.No
+
             jui._txtNo.Enabled = False
             pnlBanc.Controls.Add(jui._txtNo)
+
+            indice += 1
+        Next
+
+        indice = 0
+        pnlTerrain.Controls.Clear()
+        For Each jui In _terrain
+            jui._rb = New RadioButton()
+            jui._rb.Name = "cb" & indice.ToString
+            jui._rb.Size = New Size(20, 20)
+            jui._rb.Location = New Point(10, (indice + 1) * 22)
+            jui._rb.Checked = False
+            jui._rb.TabIndex = indice
+            pnlTerrain.Controls.Add(jui._rb)
+
+            jui._txtnom.Name = "txtNom" & indice.ToString
+            jui._txtnom.Size = New Size(100, 20)
+            jui._txtnom.Location = New Point(34, (indice + 1) * 22)
+            jui._txtnom.Enabled = False
+            pnlTerrain.Controls.Add(jui._txtnom)
+
+
+            jui._txtNo.Name = "txtNo" & indice.ToString
+            jui._txtNo.Size = New Size(45, 20)
+            jui._txtNo.Location = New Point(138, (indice + 1) * 22)
+
+            jui._txtNo.Enabled = False
+            pnlTerrain.Controls.Add(jui._txtNo)
 
             indice += 1
         Next
@@ -93,13 +136,16 @@ Public Class frmPrincipal
 
     Private Sub btnAlign_Click(sender As Object, e As EventArgs) Handles btnAlign.Click
         Dim rBox As RadioButton
-        Dim jEntre As Joueur
-        Dim jSort As Joueur
+        Dim iEntre As Integer = -1
+        Dim iSort As Integer = -1
+        Dim jSort, jEntre As Joueur
         For Each ctrl In pnlBanc.Controls
             If TypeOf (ctrl) Is RadioButton Then
                 rBox = CType(ctrl, RadioButton)
                 If rBox.Checked Then
+                    iEntre = CInt(rBox.Name.Substring(2))
                     jEntre = _partie.TrouverJoueur(CInt(CType(pnlBanc.Controls("txtNo" & rBox.Name.Substring(2)), TextBox).Text))
+                    Exit For
                 End If
             End If
         Next
@@ -107,14 +153,33 @@ Public Class frmPrincipal
             If TypeOf (ctrl) Is RadioButton Then
                 rBox = CType(ctrl, RadioButton)
                 If rBox.Checked Then
+                    iSort = CInt(rBox.Name.Substring(2))
                     jSort = _partie.TrouverJoueur(CInt(CType(pnlTerrain.Controls("txtNo" & rBox.Name.Substring(2)), TextBox).Text))
+                    Exit For
                 End If
             End If
         Next
-        If jSort Is Nothing Then
-            'remove ui
-            'add le shift dans partie
+
+        If iSort > -1 Then
+            If iEntre > -1 Then
+                _banc.Add(_terrain(iSort))
+                _terrain.RemoveAt(iSort)
+                _terrain.Add(_banc(iEntre))
+                _banc.RemoveAt(iEntre)
+                _partie.AjouterShift(jEntre, True, _video.Temps)
+                _partie.AjouterShift(jSort, False, _video.Temps)
+            Else
+                _banc.Add(_terrain(iSort))
+                _terrain.RemoveAt(iSort)
+                _partie.AjouterShift(jSort, False, _video.Temps)
+            End If
+        ElseIf iEntre > -1 AndAlso _terrain.Count < 11 Then
+            _terrain.Add(_banc(iEntre))
+            _banc.RemoveAt(iEntre)
+            _partie.AjouterShift(jEntre, True, _video.Temps)
         End If
+
+        Affichage()
     End Sub
 
     Private Sub AnnulToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles AnnulToolStripMenuItem.Click
@@ -200,27 +265,27 @@ Public Class frmPrincipal
 
     Private Sub action_OnClick(ByVal sender As Object, ByVal e As System.EventArgs)
         Dim maker As Joueur = TrouverJoueur(CType(sender, ToolStripMenuItem).OwnerItem.OwnerItem.OwnerItem.Text)
-        _actionTempo = New Action(sender.ToString, _video.Temps, maker, _depart)
+        _actionTempo = New Action(sender.ToString, _video.Temps, maker, _depart, cbDemie.Checked)
         _blnArrow = True
     End Sub
 
     Private Sub actionDeg_OnClick(ByVal sender As Object, ByVal e As System.EventArgs)
         Dim maker As Joueur = TrouverJoueur(CType(sender, ToolStripMenuItem).OwnerItem.OwnerItem.Text)
-        _actionTempo = New Action(sender.ToString, _video.Temps, maker, _depart)
+        _actionTempo = New Action(sender.ToString, _video.Temps, maker, _depart, cbDemie.Checked)
         _blnArrow = True
     End Sub
 
     Private Sub actionRemiseJeu_OnClick(ByVal sender As Object, ByVal e As System.EventArgs)
         Dim maker As Joueur = TrouverJoueur(CType(sender, ToolStripMenuItem).OwnerItem.OwnerItem.OwnerItem.Text)
         _cible = TrouverJoueur(sender.ToString())
-        _actionTempo = New Action(CType(sender, ToolStripMenuItem).OwnerItem.Text, _video.Temps, maker, _depart)
+        _actionTempo = New Action(CType(sender, ToolStripMenuItem).OwnerItem.Text, _video.Temps, maker, _depart, cbDemie.Checked)
         _blnArrow = True
         _passe = True
     End Sub
     Private Sub actionPasse_OnClick(ByVal sender As Object, ByVal e As System.EventArgs)
         Dim maker As Joueur = TrouverJoueur(CType(sender, ToolStripMenuItem).OwnerItem.OwnerItem.OwnerItem.OwnerItem.Text)
         _cible = TrouverJoueur(sender.ToString())
-        _actionTempo = New Action(CType(sender, ToolStripMenuItem).OwnerItem.Text, _video.Temps, maker, _depart)
+        _actionTempo = New Action(CType(sender, ToolStripMenuItem).OwnerItem.Text, _video.Temps, maker, _depart, cbDemie.Checked)
         _blnArrow = True
         _passe = True
     End Sub
@@ -231,7 +296,7 @@ Public Class frmPrincipal
             _depart.X = pbField.Size.Width - _depart.X
             _depart.Y = pbField.Size.Height - _depart.Y
         End If
-        _actionTempo = New Action(sender.ToString, _video.Temps, maker, _depart)
+        _actionTempo = New Action(sender.ToString, _video.Temps, maker, _depart, cbDemie.Checked)
         _partie.Actions.Add(_actionTempo)
         lbLog.Items.Add(_actionTempo)
     End Sub
@@ -242,7 +307,7 @@ Public Class frmPrincipal
             _depart.X = pbField.Size.Width - _depart.X
             _depart.Y = pbField.Size.Height - _depart.Y
         End If
-        _actionTempo = New Action(sender.ToString, _video.Temps, maker, _depart)
+        _actionTempo = New Action(sender.ToString, _video.Temps, maker, _depart, cbDemie.Checked)
         _partie.Actions.Add(_actionTempo)
         lbLog.Items.Add(_actionTempo)
     End Sub
@@ -279,7 +344,7 @@ Public Class frmPrincipal
                 _partie.Actions.Add(_actionTempo)
                 lbLog.Items.Add(_actionTempo)
                 If _actionTempo.Nom <> "Perte sur passe" AndAlso _actionTempo.Nom <> "Perte sur remise en jeu" Then
-                    _actionTempo = New Action("Ballon reçu", _actionTempo.Temps + 1, _cible, ptFin)
+                    _actionTempo = New Action("Ballon reçu", _actionTempo.Temps + 1, _cible, ptFin, cbDemie.Checked)
                     _partie.Actions.Add(_actionTempo)
                     lbLog.Items.Add(_actionTempo)
                 End If

@@ -68,4 +68,12 @@
     Public Overrides Function ToString() As String
         Return _no & " - " & _nom
     End Function
+
+    Public Shared Operator =(obj1 As Joueur, obj2 As Joueur)
+        Return obj1.NomJoueur = obj2.NomJoueur
+    End Operator
+
+    Public Shared Operator <>(obj1 As Joueur, obj2 As Joueur)
+        Return Not obj1 = obj2
+    End Operator
 End Class

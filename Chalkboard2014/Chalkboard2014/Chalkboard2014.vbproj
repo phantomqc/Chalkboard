@@ -91,6 +91,7 @@
     <Compile Include="Classes\Equipe.vb" />
     <Compile Include="Classes\Joueur.vb" />
     <Compile Include="Classes\Partie.vb" />
+    <Compile Include="Classes\Shift.vb" />
     <Compile Include="Formulaires\frmAjoutPartie.Designer.vb">
       <DependentUpon>frmAjoutPartie.vb</DependentUpon>
     </Compile>
